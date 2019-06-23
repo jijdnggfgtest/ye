@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>李狗你懂得 -.-</title>
+    <link href="https://cdn.bootcss.com/video.js/7.5.4/alt/video-js-cdn.css" rel="stylesheet">
+    <!-- videojs-contrib-hls 用于在电脑端播放 如果只需手机播放可以不引入 -->
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        .vjs-paused .vjs-big-play-button,
+        .vjs-paused.vjs-has-started .vjs-big-play-button {
+            display: block;
+        }
+        .player{
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+
+        .player .video{
+            width: 500px;
+            height: 320px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            z-index: 1000;
+        }
+        .movies{
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+        }
+
+        .close{
+            font-size: 20px;
+            width: 50px;
+            height: 50px;
+            color: white;
+            position: absolute;
+            right: 10px;
+            right: 5px;;
+            cursor: pointer;
+            display: none;
+            z-index: 1000;
+        }
+        .movie{
+            width:35%;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .movie img{
+            width: 100%;
+        }
+        .movie p{
+            font-size: 12px;
+        }
+        .btns{
+            text-align: center;
+        }
+        .btns .btn{
+            display: inline-block;
+            line-height: 1;
+            white-space: nowrap;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #dcdfe6;
+            color: #606266;
+            -webkit-appearance: none;
+            text-align: center;
+            box-sizing: border-box;
+            outline: none;
+            margin: 0;
+            transition: .1s;
+            font-weight: 500;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            color: #fff;
+            background-color: #67c23a;
+            border-color: #67c23a;
+        }
+        /* 800px; */
+        @media screen and (min-width:800px){
+            .movie{
+                width:21%!important;
+                margin-bottom: 20px;
+                
+            }
+        }
+
+        .player{
+
+            background-color: rgba(0,0,0,.3);
+        }
+
+        .player video{
+            width: 100%;
+            height: 100%;
+        }
+
+        #so{
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;margin-bottom:20px;">李狗你懂得 -.-</h1>
+    <!-- 播放 -->
+    <div class="player" v-show="showLayer">
+        <span class="close" id="close">×</span>
+        <video id="video" class="video" >
+            <source id="so" src="https://aszyw.com/20190621/pR3BU9Xi/index.m3u8" type="application/x-mpegURL" />
+        </video>
+    </div>
+    <div id="app">
+        <div class="movies" >
+            <div class="movie" v-for="(item,index) in data" :key="item.id" :data-id="item.id" @click="cm(item.id)">
+                <p class="title">{{ item.title }}</p>
+                <img :src="item.coverpath" alt="">
+            </div>
+        </div>
+        <div class="btns" >
+            <button class="btn prev" @click="prev">上一页</button>
+            <button class="btn now">{{page}} / {{total}}</button>
+            <button class="btn next" @click="next">下一页</button>
+        </div>
+    </div>
+    <script src='https://cdn.bootcss.com/video.js/7.5.4/alt/video.core.js'></script>
+    <script src="https://cdn.bootcss.com/videojs-contrib-hls/5.15.0/videojs-contrib-hls.js" type="text/javascript"></script>
+    <script src="https://cdn.bootcss.com/vue/2.6.10/vue.min.js"></script>
+    <script src="https://cdn.bootcss.com/axios/0.19.0-beta.1/axios.min.js"></script>
+    <script type="text/javascript">
+        var player;
+        function showLayer(){
+            document.getElementsByClassName("player")[0].style.display = "block";
+            document.getElementById("close").style.display = "block";
+        }
+
+        function hideLayer(){
+            document.getElementsByClassName("player")[0].style.display = "none";
+            document.getElementById("close").style.display = "none";
+            player.pause();
+            player.pause();
+        }
+        document.getElementById("close").onclick = function(){
+            console.log(1);
+            hideLayer();
+        };
+        new Vue({
+            el:"#app",
+            data:{
+                player:null,
+                page:1,
+                total:0,
+                data:[],
+                path:"https://aszyw.com/20190621/pR3BU9Xi/index.m3u8"
+            },
+            created(){
+                this.getMovie();
+                 player = videojs('video');// 初始化
+            },
+            methods:{
+                // 重新加载
+                reload(src){
+                    player.pause();
+                    player.src({
+                        src:src,
+                        type:"application/x-mpegURL"
+                    })
+                    player.load();
+                    player.play();
+                },
+                // 获取新的
+                getMovie(){
+                    axios.get(`http://cm1.cm1.caomei444.com/api/videosort/0?page=${this.page}`)
+                    .then(result =>{
+                        if(result.data.code == 200){
+                            this.data = result.data.rescont.data;
+                            this.total = result.data.rescont.total;
+                        }else{
+                            alert("获取数据出错");
+                        }
+                    },error =>{
+                        alert("获取数据出错");
+                    })
+                },
+                getMovieInfo(id){
+                    axios.get(`http://cm1.cm1.caomei444.com/api/videoplay/${id}?uuid=1112-fgfg-1212-gffgfg&device=1`)
+                    .then(result =>{
+                        if(result.data.code == 200){
+                            this.path = result.data.rescont.videopath;
+                            this.playMovie();
+                        }else{
+                            alert("获取数据出错");
+                        }
+                    },error =>{
+                        alert("获取数据出错");
+                    })
+                },
+                cm(id){
+                    // 请求到当前信息
+                    this.getMovieInfo(id);
+                },
+                playMovie(){
+                    showLayer();
+                    this.reload(this.path);
+                },
+                prev(){
+                    if(this.page == 1){
+                        return;
+                    }else if(page > 1){
+                        this.page --;
+                        this.getMovie();
+                    }
+                },
+                next(){
+                    console.log(1);
+                    if(this.page == this.total){
+                        return;
+                    }else if(this.page < this.total){
+                        this.page ++;
+                        this.getMovie();
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
